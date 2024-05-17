@@ -10,6 +10,7 @@
 			<template v-if="!isLoggedIn">
 				<router-link to="/login">Login</router-link>
 				<router-link to="/signup">Sign Up</router-link>
+				<router-link to="/table">Table</router-link>
 			</template>
 			<template v-else>
 				<a href="javascript:;" @click="logout" class="logout-button">Logout</a>

@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import LoginView from '../views/LoginView';
 import SignupView from '../views/SignupView';
 import MainView from '../views/MainView';
+import TableView from '../views/TableView';
 import PostAddView from '../views/PostAddView';
 import PostDetailView from '../views/PostDetailView';
 import store from '../store';
@@ -29,6 +30,11 @@ export default new Router({
 			path: '/signup',
 			name: 'signup',
 			component: SignupView,
+		},
+		{
+			path: '/table',
+			name: 'table',
+			component: TableView,
 		},
 		{
 			path: '/main',
