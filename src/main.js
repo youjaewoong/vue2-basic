@@ -3,7 +3,9 @@ import App from './App.vue';
 import router from './routes';
 import store from './store';
 import * as filters from './utils/filters.js';
+import Vuelidate from 'vuelidate';
 
+Vue.use(Vuelidate);
 Vue.config.productionTip = false;
 
 Object.keys(filters).forEach(key => Vue.filter(key, filters[key]));

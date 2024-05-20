@@ -5,8 +5,8 @@
 			<form @submit.prevent="registerUser" class="form">
 				<div>
 					<div class="button-container">
-						<button @click="addRow">+</button>
-						<button @click="removeRow">-</button>
+						<button @click="addRow" type="button">+</button>
+						<button @click="removeRow" type="button">-</button>
 						<input
 							type="file"
 							@change="uploadExcel"
@@ -36,14 +36,84 @@
 									<input
 										type="text"
 										v-model="item.etc1"
-										:class="{ 'input-error': item.etc1.length > 10 }"
+										@blur="$v.items.$each[index].etc1.$touch()"
+										:class="{
+											'input-error': $v.items.$each[index].etc1.$error,
+										}"
 									/>
-									<span v-if="item.etc1.length > 10" class="error-message"
-										>길이가 10자리가 넘어갑니다</span
+									<span
+										v-if="
+											$v.items.$each[index].etc1.$error &&
+												!$v.items.$each[index].etc1.required
+										"
+										class="error-message"
 									>
+										필수 입력 항목입니다.
+									</span>
+									<span
+										v-if="
+											$v.items.$each[index].etc1.$error &&
+												!$v.items.$each[index].etc1.maxLength
+										"
+										class="error-message"
+									>
+										길이가 10자리를 넘을 수 없습니다.
+									</span>
+									<span
+										v-if="
+											$v.items.$each[index].etc1.$error &&
+												!$v.items.$each[index].etc1.notDuplicate
+										"
+										class="error-message"
+									>
+										중복된 값이 있습니다.
+									</span>
 								</td>
-								<td><input type="text" v-model="item.etc2" /></td>
-								<td><input type="number" v-model="item.amt" /></td>
+								<td>
+									<input
+										type="text"
+										v-model="item.etc2"
+										@blur="$v.items.$each[index].etc2.$touch()"
+										:class="{
+											'input-error': $v.items.$each[index].etc2.$error,
+										}"
+									/>
+									<span
+										v-if="
+											$v.items.$each[index].etc2.$error &&
+												!$v.items.$each[index].etc2.required
+										"
+										class="error-message"
+									>
+										필수 입력 항목입니다.
+									</span>
+								</td>
+								<td>
+									<input
+										type="number"
+										v-model="item.amt"
+										@blur="$v.items.$each[index].amt.$touch()"
+										:class="{ 'input-error': $v.items.$each[index].amt.$error }"
+									/>
+									<span
+										v-if="
+											$v.items.$each[index].amt.$error &&
+												!$v.items.$each[index].amt.required
+										"
+										class="error-message"
+									>
+										필수 입력 항목입니다.
+									</span>
+									<span
+										v-if="
+											$v.items.$each[index].amt.$error &&
+												!$v.items.$each[index].amt.numeric
+										"
+										class="error-message"
+									>
+										숫자여야 합니다.
+									</span>
+								</td>
 							</tr>
 						</tbody>
 						<tfoot>
@@ -53,17 +123,18 @@
 							</tr>
 						</tfoot>
 					</table>
+					<div class="button-container">
+						<button type="submit" class="submit-button">등록</button>
+					</div>
 				</div>
 			</form>
-			<p class="log">
-				{{ logMessage }}
-			</p>
 		</div>
 	</div>
 </template>
 
 <script>
 import PageHeader from './common/PageHeader.vue';
+import { required, maxLength, numeric } from 'vuelidate/lib/validators';
 import * as XLSX from 'xlsx';
 
 export default {
@@ -78,6 +149,28 @@ export default {
 			],
 		};
 	},
+	validations() {
+		const notDuplicate = value => {
+			if (!value) return true; // 값이 비어 있으면 중복 검사를 건너뜁니다.
+			const etc1Values = this.items.map(item => item.etc1);
+			const occurrences = etc1Values.filter(etc1 => etc1 === value).length;
+			return occurrences <= 1;
+		};
+
+		return {
+			items: {
+				$each: {
+					etc1: {
+						required,
+						maxLength: maxLength(10),
+						notDuplicate,
+					},
+					etc2: { required },
+					amt: { required, numeric },
+				},
+			},
+		};
+	},
 	computed: {
 		allChecked() {
 			return this.items.every(item => item.checked);
@@ -87,6 +180,20 @@ export default {
 		},
 	},
 	methods: {
+		notDuplicate(value) {
+			if (!value) return true; // 값이 비어 있으면 중복 검사를 건너뜁니다.
+			const etc1Values = this.items.map(item => item.etc1);
+			const occurrences = etc1Values.filter(etc1 => etc1 === value).length;
+			return occurrences <= 1;
+		},
+		registerUser() {
+			this.$v.$touch();
+			if (this.$v.$invalid) {
+				alert('입력값을 확인해주세요.');
+				return;
+			}
+			// 유효성 검사를 통과한 경우 폼 데이터를 처리합니다.
+		},
 		toggleAll(event) {
 			const isChecked = event.target.checked;
 			this.items.forEach(item => {
@@ -127,7 +234,9 @@ export default {
 
 <style scoped>
 .button-container {
-	margin-bottom: 10px;
+	margin: 20px 0;
+	display: flex;
+	justify-content: center;
 }
 
 .button-container button,
@@ -143,7 +252,6 @@ export default {
 
 .add-btn {
 	background-color: #28a745;
-	/* 녹색 */
 	color: #ffffff;
 }
 
@@ -153,7 +261,6 @@ export default {
 
 .remove-btn {
 	background-color: #dc3545;
-	/* 빨간색 */
 	color: #ffffff;
 }
 
@@ -163,22 +270,11 @@ export default {
 
 .upload-btn {
 	background-color: #007bff;
-	/* 파란색 */
 	color: #ffffff;
 }
 
 .upload-btn:hover {
 	background-color: #0056b3;
-}
-
-.download-btn {
-	background-color: #ffc107;
-	/* 노란색 */
-	color: #ffffff;
-}
-
-.download-btn:hover {
-	background-color: #e0a800;
 }
 
 .styled-table {
@@ -232,5 +328,20 @@ export default {
 	font-size: 14px;
 	display: block;
 	margin-top: 5px;
+}
+
+.submit-button {
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	border: none;
+	border-radius: 4px;
+	background-color: #007bff;
+	color: #ffffff;
+	transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+	background-color: #0056b3;
 }
 </style>
