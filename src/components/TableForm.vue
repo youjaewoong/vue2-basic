@@ -125,6 +125,9 @@
 					</table>
 					<div class="button-container">
 						<button type="submit" class="submit-button">등록</button>
+						<a href="#" @click.prevent="downloadExcel" class="submit-button">
+							엑셀 템플릿 다운로드
+						</a>
 					</div>
 				</div>
 			</form>
@@ -208,7 +211,29 @@ export default {
 				this.items.pop();
 			}
 		},
+		downloadExcel() {
+			// 서버로 GET 요청을 보내고 응답을 처리하여 파일을 다운로드
+			console.log(`${process.env.VUE_APP_API_URL}download/excel`);
+			fetch(`${process.env.VUE_APP_API_URL}download/excel`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/octet-stream',
+				},
+			})
+				.then(response => response.blob())
+				.then(blob => {
+					const url = window.URL.createObjectURL(new Blob([blob]));
+					const link = document.createElement('a');
+					link.href = url;
+					link.setAttribute('download', 'invoceTemplate.xlsx');
+					document.body.appendChild(link);
+					link.click();
+					link.parentNode.removeChild(link);
+				})
+				.catch(error => console.error('Error downloading the file:', error));
+		},
 		uploadExcel(event) {
+			this.items = [];
 			const file = event.target.files[0];
 			const reader = new FileReader();
 			reader.onload = e => {
