@@ -43,6 +43,21 @@
 						:class="nicknameValidClass"
 					/>
 				</div>
+				<!-- etc -->
+				<div>
+					<label for="etc">etc</label>
+					<textarea
+						v-model="text"
+						@input="checkLength"
+						placeholder="Write something..."
+					></textarea>
+					<p class="validation-text">글자 수: {{ textLength }}</p>
+					<p class="validation-text">
+						<span class="warning" v-if="textLength >= maxLength">
+							글자 수 제한을 초과했습니다.
+						</span>
+					</p>
+				</div>
 				<!-- Attatch -->
 				<div>
 					<label for="username">Attatch</label>
@@ -97,6 +112,8 @@ export default {
 	},
 	data() {
 		return {
+			text: '',
+			maxLength: 100,
 			username: '',
 			password: '',
 			nickname: '',
@@ -105,6 +122,9 @@ export default {
 		};
 	},
 	computed: {
+		textLength() {
+			return this.text.length;
+		},
 		usernameValidClass() {
 			if (!this.username) {
 				return;
@@ -180,6 +200,11 @@ export default {
 		removeInput() {
 			if (this.fileInputs.length > 1) {
 				this.fileInputs.splice(1, 1); // 두 번째 입력 필드 제거
+			}
+		},
+		checkLength() {
+			if (this.text.length > this.maxLength) {
+				this.text = this.text.slice(0, this.maxLength);
 			}
 		},
 		validateFile(index, event) {
