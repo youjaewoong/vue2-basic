@@ -53,7 +53,7 @@
 					></textarea>
 					<p class="validation-text">글자 수: {{ textLength }}</p>
 					<p class="validation-text">
-						<span class="warning" v-if="textLength >= maxLength">
+						<span class="warning" v-if="isOverLimit">
 							글자 수 제한을 초과했습니다.
 						</span>
 					</p>
@@ -124,6 +124,9 @@ export default {
 	computed: {
 		textLength() {
 			return this.text.length;
+		},
+		isOverLimit() {
+			return this.textLength >= this.maxLength;
 		},
 		usernameValidClass() {
 			if (!this.username) {
@@ -203,9 +206,17 @@ export default {
 			}
 		},
 		checkLength() {
-			if (this.text.length > this.maxLength) {
-				this.text = this.text.slice(0, this.maxLength);
+			let inputText = event.target.value;
+			let currentLength = 0;
+			let validText = '';
+			for (let char of inputText) {
+				currentLength += 1;
+				if (currentLength > this.maxLength) {
+					break;
+				}
+				validText += char;
 			}
+			this.text = validText;
 		},
 		validateFile(index, event) {
 			const file = event.target.files[0];
